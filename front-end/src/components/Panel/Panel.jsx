@@ -12,16 +12,22 @@ export function Panel() {
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [error, setError] = useState(null)
 	const [selectedCategory, setSelectedCategory] = useState(null)
-
+	const [isCancelled, setIsCancelled] = useState(false)
 	useEffect(() => {
 		const params = selectedCategory ? `?category=${selectedCategory}` : ''
 		fetch(`${url}${params}`)
 			.then(response => response.json())
 			.then(data => {
-				setData(data)
-				setIsLoaded(true)
+				if(!isCancelled) {
+					setData(data)
+					setIsLoaded(true)
+				}
 			})
-	}, [selectedCategory])
+
+			return () => {
+				setIsCancelled(true)
+			}
+	}, [selectedCategory, isCancelled])
 
 	const handleFormSubmit = formData => {
 		fetch(url, {
