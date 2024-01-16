@@ -4,7 +4,8 @@ import styles from './Panel.module.css'
 import { Form } from '../Form/Form'
 import { ErrorMessage } from '../ErrorMessage/ErrorMessage'
 import { FilterButton } from '../FilterButton/FilterButton'
-
+import { getCategoryInfo } from '../../utils/getCategoryInfo'
+import { Info } from '../Info/Info'
 const url = 'http://localhost:3000/words'
 
 export function Panel() {
@@ -28,6 +29,8 @@ export function Panel() {
 				setIsCancelled(true)
 			}
 	}, [selectedCategory, isCancelled])
+
+	const categoryInfo = getCategoryInfo(selectedCategory)
 
 	const handleFormSubmit = formData => {
 		fetch(url, {
@@ -75,6 +78,7 @@ export function Panel() {
 			{error && <ErrorMessage message={error} />}
 
 			<section className={styles.section}>
+			<Info>{categoryInfo}</Info>
 				<Form handleFormSubmit={handleFormSubmit} />
 				<div className={styles.filters}>
 					<FilterButton active={selectedCategory === null} onClick={() => handleFilterClick(null)}>
