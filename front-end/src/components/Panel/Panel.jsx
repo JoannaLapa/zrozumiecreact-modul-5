@@ -2,33 +2,39 @@ import { useState, useEffect } from 'react'
 import { List } from '../List/List'
 import styles from './Panel.module.css'
 import { Form } from '../Form/Form'
-import { ErrorMessage } from '../ErrorMessage/ErrorMessage'
 import { FilterButton } from '../FilterButton/FilterButton'
 import { getCategoryInfo } from '../../utils/getCategoryInfo'
 import { Info } from '../Info/Info'
-const url = 'http://localhost:3000/words'
+const url = 'http://localhost:3000/words1'
 
-export function Panel() {
+export function Panel({ onError }) {
 	const [data, setData] = useState([])
 	const [isLoaded, setIsLoaded] = useState(false)
-	const [error, setError] = useState(null)
 	const [selectedCategory, setSelectedCategory] = useState(null)
-	const [isCancelled, setIsCancelled] = useState(false)
+	
 	useEffect(() => {
+		let isCancelled = false
 		const params = selectedCategory ? `?category=${selectedCategory}` : ''
 		fetch(`${url}${params}`)
-			.then(response => response.json())
+			.then(response => {
+				if (response.ok) {
+					return response.json()
+				}
+
+				throw new Error('Błąd podczas ładowania danych')
+			})
 			.then(data => {
-				if(!isCancelled) {
+				if (!isCancelled) {
 					setData(data)
 					setIsLoaded(true)
 				}
 			})
+			.catch(onError)
 
-			return () => {
-				setIsCancelled(true)
-			}
-	}, [selectedCategory, isCancelled])
+		return () => {
+			isCancelled = true
+		}
+	}, [selectedCategory, onError])
 
 	const categoryInfo = getCategoryInfo(selectedCategory)
 
@@ -59,10 +65,7 @@ export function Panel() {
 					throw new Error('Błąd podczas usuwania')
 				}
 			})
-			.catch(e => {
-				setError(e.message)
-				setTimeout(() => setError(null), 3000)
-			})
+			.catch(onError)
 	}
 
 	if (!isLoaded) {
@@ -74,25 +77,21 @@ export function Panel() {
 	}
 
 	return (
-		<>
-			{error && <ErrorMessage message={error} />}
-
-			<section className={styles.section}>
+		<section className={styles.section}>
 			<Info>{categoryInfo}</Info>
-				<Form handleFormSubmit={handleFormSubmit} />
-				<div className={styles.filters}>
-					<FilterButton active={selectedCategory === null} onClick={() => handleFilterClick(null)}>
-						Wszystkie
-					</FilterButton>
-					<FilterButton active={selectedCategory === 'noun'} onClick={() => handleFilterClick('noun')}>
-						Rzeczowniki
-					</FilterButton>
-					<FilterButton active={selectedCategory === 'verb'} onClick={() => handleFilterClick('verb')}>
-						Czasowniki
-					</FilterButton>
-				</div>
-				<List data={data} onDeleteItem={handleDeleteItem} />
-			</section>
-		</>
+			<Form handleFormSubmit={handleFormSubmit} />
+			<div className={styles.filters}>
+				<FilterButton active={selectedCategory === null} onClick={() => handleFilterClick(null)}>
+					Wszystkie
+				</FilterButton>
+				<FilterButton active={selectedCategory === 'noun'} onClick={() => handleFilterClick('noun')}>
+					Rzeczowniki
+				</FilterButton>
+				<FilterButton active={selectedCategory === 'verb'} onClick={() => handleFilterClick('verb')}>
+					Czasowniki
+				</FilterButton>
+			</div>
+			<List data={data} onDeleteItem={handleDeleteItem} />
+		</section>
 	)
 }
